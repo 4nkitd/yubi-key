@@ -47,10 +47,10 @@ cd yubi-key
 ### Option B: Install directly with `go install`
 ```bash
 go install github.com/4nkitd/yubi-key/cmd/yubiesp@latest
-yubiesp setup
+yubiesp install
 ```
 
-`yubiesp setup` automatically detects your serial port, flashes the embedded ESP32 firmware, unpacks the Chrome extension to `~/.config/yubiesp/extension`, starts the background bridge service on `http://127.0.0.1:17380`, and blinks the ESP32 LED.
+`yubiesp install` (or `yubiesp setup`) automatically detects your serial port, flashes the embedded ESP32 firmware, unpacks the Chrome extension to `~/.config/yubiesp/extension`, symlinks `yubiesp` onto your `$PATH`, starts the background bridge service on `http://127.0.0.1:17380`, and blinks the ESP32 LED.
 
 ### Load the browser extension
 1. Open `chrome://extensions` in your browser.
@@ -82,11 +82,11 @@ YubiESP **will not pass OpenAI's optional "Daybreak" lockdown enrollment** (`/ad
 ## CLI commands
 
 ```bash
-# Flash ESP32, unpack Chrome extension, and install background bridge service
-yubiesp setup
+# One-command install: flash ESP32, unpack Chrome extension, and start background bridge
+yubiesp install
 
 # Update binary/extension/service without re-flashing the ESP32
-yubiesp setup --skip-flash
+yubiesp install --skip-flash
 
 # Query ESP32 status, AAGUID, signature counter, and resident key slots
 yubiesp info
@@ -100,8 +100,11 @@ yubiesp test
 # Print (or reveal in Finder) the unpacked Chrome extension directory
 yubiesp extension --open
 
-# Stop and remove the background bridge service
+# Stop service and remove installed binary & extension (keeps credentials.json)
 yubiesp uninstall
+
+# Full uninstall including ~/.config/yubiesp credentials & logs
+yubiesp uninstall --purge
 ```
 
 ---

@@ -62,6 +62,18 @@ func copySelfBinary() (string, error) {
 			_ = os.Symlink(dest, linkPath)
 		}
 	}
+	for _, sysBin := range []string{"/opt/homebrew/bin", "/usr/local/bin"} {
+		if info, err := os.Stat(sysBin); err == nil && info.IsDir() {
+			linkPath := filepath.Join(sysBin, "yubiesp")
+			if f, err := os.OpenFile(filepath.Join(sysBin, ".yubiesp-probe"), os.O_CREATE|os.O_WRONLY, 0o644); err == nil {
+				_ = f.Close()
+				_ = os.Remove(filepath.Join(sysBin, ".yubiesp-probe"))
+				_ = os.Remove(linkPath)
+				_ = os.Symlink(dest, linkPath)
+				break
+			}
+		}
+	}
 	return dest, nil
 }
 
@@ -167,6 +179,19 @@ func findEsptoolCmd() ([]string, error) {
 	}
 	if p, err := exec.LookPath("uvx"); err == nil {
 		return []string{p, "--from", "esptool", "esptool"}, nil
+	}
+	if runtime.GOOS == "darwin" {
+		if brewPath, err := exec.LookPath("brew"); err == nil {
+			fmt.Println("==> Installing esptool via Homebrew...")
+			cmd := exec.Command(brewPath, "install", "esptool")
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			if cmd.Run() == nil {
+				if p, err := exec.LookPath("esptool"); err == nil {
+					return []string{p}, nil
+				}
+			}
+		}
 	}
 	if p, err := exec.LookPath("python3"); err == nil {
 		return []string{p, "-m", "esptool"}, nil
@@ -293,7 +318,8 @@ Next step (load the browser extension once):
 	return nil
 }
 
-func RunUninstall() error {
+func RunUninstall(purge bool) error {
+	fmt.Println("==> Stopping YubiESP background service...")
 	stopService()
 	home, _ := os.UserHomeDir()
 	if runtime.GOOS == "darwin" {
@@ -301,7 +327,31 @@ func RunUninstall() error {
 	} else if runtime.GOOS == "linux" {
 		_ = exec.Command("systemctl", "--user", "disable", "yubiesp-bridge.service").Run()
 		_ = os.Remove(filepath.Join(home, ".config", "systemd", "user", "yubiesp-bridge.service"))
+		_ = exec.Command("systemctl", "--user", "daemon-reload").Run()
 	}
-	fmt.Println("Stopped and removed YubiESP background service.")
+
+	targetBin := filepath.Clean(InstalledBinPath())
+	candidates := []string{
+		filepath.Join(home, ".local", "bin", "yubiesp"),
+		"/opt/homebrew/bin/yubiesp",
+		"/usr/local/bin/yubiesp",
+	}
+	for _, link := range candidates {
+		if dest, err := os.Readlink(link); err == nil && filepath.Clean(dest) == targetBin {
+			_ = os.Remove(link)
+		}
+	}
+
+	cfgDir := bridge.DefaultConfigDir()
+	_ = os.RemoveAll(filepath.Join(cfgDir, "bin"))
+	_ = os.RemoveAll(filepath.Join(cfgDir, "extension"))
+
+	if purge {
+		_ = os.RemoveAll(cfgDir)
+		fmt.Printf("==> Removed service, binaries, extension, and purged %s\n", cfgDir)
+	} else {
+		fmt.Printf("==> Stopped and removed YubiESP service, binaries, and extension.\n")
+		fmt.Printf("    (Passkey index preserved at %s/credentials.json; pass --purge to delete all data)\n", cfgDir)
+	}
 	return nil
 }

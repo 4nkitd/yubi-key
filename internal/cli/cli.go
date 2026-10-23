@@ -180,13 +180,14 @@ func usage() {
 	fmt.Fprintf(os.Stderr, `YubiESP - ESP32-WROOM Type-C Hardware Security Key CLI
 
 Usage:
-  yubiesp setup [--port PORT] [--skip-flash]   Flash ESP32, unpack Chrome extension, and start background bridge
-  yubiesp serve [--addr 127.0.0.1:17380]       Run the localhost WebAuthn bridge daemon in foreground
-  yubiesp info  [--port PORT]                  Query ESP32 hardware info, AAGUID, and signature counter
-  yubiesp blink [--port PORT]                  Blink the ESP32 onboard LED 5 times
-  yubiesp test  [--port PORT]                  Run interactive end-to-end hardware enroll & sign verification
-  yubiesp extension [--open]                   Extract and print the unpacked Chrome extension directory
-  yubiesp uninstall                            Stop and remove the background bridge service
+  yubiesp install [--port PORT] [--skip-flash]  One-command install: flash ESP32, unpack Chrome extension & start bridge
+  yubiesp setup   [--port PORT] [--skip-flash]  Alias for 'yubiesp install'
+  yubiesp serve   [--addr 127.0.0.1:17380]      Run the localhost WebAuthn bridge daemon in foreground
+  yubiesp info    [--port PORT]                 Query ESP32 hardware info, AAGUID, and signature counter
+  yubiesp blink   [--port PORT]                 Blink the ESP32 onboard LED 5 times
+  yubiesp test    [--port PORT]                 Run interactive end-to-end hardware enroll & sign verification
+  yubiesp extension [--open]                    Extract and print the unpacked Chrome extension directory
+  yubiesp uninstall [--purge]                   Stop service and remove installed binary & extension (--purge wipes credentials)
 `)
 }
 
@@ -270,8 +271,11 @@ func Run(args []string) int {
 			_ = exec.Command("open", "-R", filepath.Join(extDir, "manifest.json")).Run()
 		}
 
-	case "uninstall":
-		if err := installer.RunUninstall(); err != nil {
+	case "uninstall", "remove":
+		fs := flag.NewFlagSet("uninstall", flag.ExitOnError)
+		purge := fs.Bool("purge", false, "Also delete ~/.config/yubiesp credentials and secrets")
+		_ = fs.Parse(args[2:])
+		if err := installer.RunUninstall(*purge); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			return 1
 		}

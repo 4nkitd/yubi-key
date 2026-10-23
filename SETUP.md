@@ -79,6 +79,8 @@ Chromium extensions using `chrome.webAuthenticationProxy` must be loaded in `chr
 * **`NotAllowedError: The operation is not allowed at this time because the page does not have focus`:**
   Chromium checks `WebContents::IsFocused()` when `completeCreateRequest` resolves. Do not open the extension toolbar popup while a ceremony is waiting for a button press; keep the webpage tab active.
 * **Updating the service without re-flashing the ESP32:**
-  Run `./setup.sh --skip-flash` (or `yubiesp setup --skip-flash`).
+  Run `./setup.sh --skip-flash` (or `yubiesp install --skip-flash`).
+* **Uninstalling YubiESP:**
+  Run `yubiesp uninstall` (stops service and removes binary/extension while keeping `~/.config/yubiesp/credentials.json`) or `yubiesp uninstall --purge` (wipes all configuration and stored metadata).
 * **Recompiling firmware after editing `firmware/yubiesp/yubiesp.ino`:**
   Compile with PlatformIO (`board = esp32dev`, `platform = espressif32@6.7.0`, `framework = arduino`) and copy `.pio/build/esp32dev/{bootloader,partitions,firmware}.bin` into `internal/assets/firmware/`, then rebuild the Go binary.
