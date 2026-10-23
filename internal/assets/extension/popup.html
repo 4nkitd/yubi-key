@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>YubiESP Hardware Key</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="brand">
+        <div class="chip-icon" id="ledIndicator"></div>
+        <div>
+          <div class="title">YubiESP</div>
+          <div class="subtitle" id="devicePort">Checking USB serial...</div>
+        </div>
+      </div>
+      <label class="toggle" title="Intercept Chrome WebAuthn requests with ESP32">
+        <input type="checkbox" id="proxyToggle" checked />
+        <span class="slider"></span>
+      </label>
+    </header>
+
+    <section class="banner" id="ceremonyBanner" hidden>
+      <div class="pulse-dot"></div>
+      <div class="banner-text" id="ceremonyText">Press BOOT button on ESP32...</div>
+    </section>
+
+    <section class="stats">
+      <div class="stat-card">
+        <span class="stat-label">STATUS</span>
+        <span class="stat-value" id="connStatus">Offline</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">COUNTER</span>
+        <span class="stat-value mono" id="signCounter">-</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">NVS KEYS</span>
+        <span class="stat-value mono" id="rkCount">-</span>
+      </div>
+    </section>
+
+    <section class="actions">
+      <button class="btn" id="blinkBtn" type="button">Blink ESP32 LED</button>
+      <button class="btn secondary" id="syncBtn" type="button">Sync from NVS</button>
+    </section>
+
+    <section class="creds-section">
+      <div class="section-header">
+        <span>PASSKEYS</span>
+        <span class="count-pill" id="credCount">0</span>
+      </div>
+      <div class="creds-list" id="credsList">
+        <div class="empty">No passkeys registered yet.</div>
+      </div>
+    </section>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
